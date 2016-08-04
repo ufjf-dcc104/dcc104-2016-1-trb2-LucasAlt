@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Colisão Circular</title>
+		<style>
+			canvas {
+				border: 1px solid black;
+			}
+			body{
+				width: 500px;
+				margin: auto;
+			}
+		</style>
+		<script src="Sprite.js"></script>
+	</head>
+	<body>
+	<h1>Colisão Circular</h1>
+	<canvas width="498" height="300">
+		Seu navegador não tem suporte ao canvas!
+		Atualize seu navegador.
+	</canvas>
+	<script>
+		var tela = document.getElementsByTagName("canvas")[0];
+		var ctx = tela.getContext("2d");
+		var fps = 50;
+		var dt = 1/fps;
+		var nave = new Image();
+		nave.src = "img/player_ship.png";
+		var imgInimigo1 = new Image();
+		imgInimigo1.src = "img/enemy_1.png";
+		var imgTiros = new Image();
+		imgTiros.src = "img/tiros.png";
+
+		var pc = new Sprite();
+		pc.danificado = 0;
+
+		var tiros = [];
+		var inimigos = [];
+		var excluir = [];
+		function criaInimigo(x, y){
+			var inimigo = new Sprite();
+			inimigo.raio = 16;
+			inimigo.x = x;
+			inimigo.y = y;
+			inimigo.ay = 100;
+			inimigo.restricoes = function () {
+				if(this.y>tela.height+15){
+					this.x = pc.x+50-Math.random()*100;
+					this.y = -30-Math.random()*150;
+					this.vy = 50-Math.random()*20;
+					this.vx = 0;
+				}
+				this.ax = 0.8*(pc.x-this.x);
+				//this.ay = 0.8*(pc.y-this.y);
+			};
+			inimigo.desenhar = function(){
+				/*
+				ctx.strokeStyle = 'black';
+				ctx.beginPath();
+				ctx.arc(this.x, this.y, this.raio, 0, 2*Math.PI);
+				ctx.closePath();
+				ctx.stroke();*/
+											//img, X, Y, W, H
+				ctx.drawImage(imgInimigo1, this.x-this.raio, this.y-this.raio, 2*this.raio, 2*this.raio);
+			};
+			return inimigo;
+		}
+		for (var i = 0; i < 10; i++) {
+			inimigos.push(criaInimigo(100+20*i, -40*i));
+		}
+
+		var tiro = new Sprite();
+		tiro.y =  -12000;
+		tiro.raio = 6;
+		tiro.cor = 'yellow';
+		tiro.col = 0;
+
+		tiro.restricoes = function () {};
+		tiro.desenhar = function() {
+			// img, sx, sy, sw, sh, dx, dy, dw, dh
+			ctx.drawImage(imgTiros,
+				Math.floor(this.col)*32, 0, 32, 32,
+				this.x-this.raio, this.y-this.raio, 2*this.raio, 2*this.raio);
+			if(this.col>=4) {
+				this.col =0;
+			} else {
+				this.col+= 15*dt;
+			}
+		};
+
+
+
+		pc.desenhar = function (){
+			if(this.danificado>0){
+				ctx.strokeStyle = 'hsl('+(this.danificado/2*120)+', 50%, 50%)';
+				ctx.beginPath();
+				ctx.arc(this.x, this.y, this.raio, 0, 2*Math.PI);
+				ctx.closePath();
+				ctx.stroke();
+			} else {
+				ctx.fillStyle = this.cor;
+			}
+			this.danificado -= dt;
+			ctx.drawImage(nave, this.x-this.raio, this.y-this.raio, 2*this.raio, 2*this.raio);
+		}
+
+
+		function passo(){
+			pc.mover();
+			for (var i in inimigos) {
+				inimigos[i].mover();
+			}
+			tiro.mover();
+
+			pc.restricoes();
+			for (var i in inimigos) {
+				inimigos[i].restricoes();
+			}
+			tiro.restricoes();
+
+			//Limpar a tela
+ 			ctx.clearRect(0,0, tela.width, tela.height);
+
+			for (var i in inimigos) {
+				inimigos[i].desenhar();
+			}
+			tiro.desenhar();
+			pc.desenhar();
+			for (var i in inimigos) {
+				if(pc.danificado<=0 && pc.colidiuComCircular(inimigos[i])){
+					pc.danificado = 2;
+					inimigos[i].y = 1200;
+				}
+				if(tiro.colidiuComCircular(inimigos[i])){
+					inimigos[i].y = 1200;
+					excluir.push(inimigos[i]);
+					tiro.y = -1200;
+				}
+			}
+			for(var e in excluir){
+				inimigos.splice(inimigos.indexOf(excluir[e]),1);
+			}
+			excluir = [];
+
+
+
+		}
+
+		function teclaPressionada(e){
+			console.log("Tecla Pressionada: " + e.keyCode);
+			switch(e.keyCode){
+				case 32:
+					if(tiro.y < -10){
+						tiro.x = pc.x;
+						tiro.y = pc.y;
+						tiro.vy = -200;
+					}
+				break;
+				case 37:
+					pc.ax = -300;
+				break;
+				case 39:
+					pc.ax = 300;
+				break;
+				case 38:
+					pc.ay = -300;
+				break;
+				case 40:
+					pc.ay = 300;
+				break;
+			}
+
+		}
+
+		function teclaSolta(e){
+			console.log("Tecla Solta: " + e.keyCode);
+			switch(e.keyCode){
+				case 37:
+				case 39:
+					pc.ax = 0;
+					break;
+				case 38:
+				case 40:
+					pc.ay = 0;
+				break;
+			}
+		}
+
+		setInterval(passo, 1000/fps);
+		addEventListener("keydown", teclaPressionada);
+		addEventListener("keyup", teclaSolta);
+
+
+
+	</script>
+	</body>
+</html>

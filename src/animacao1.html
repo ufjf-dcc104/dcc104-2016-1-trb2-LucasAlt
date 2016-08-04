@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Primitivas</title>
+		<style>
+			canvas {
+				border: 1px solid black;
+			}
+			body{
+				width: 500px;
+				margin: auto;
+			}
+		</style>
+	</head>
+	<body>
+	<h1>Primitivas</h1>
+	<canvas width="498" height="300">
+		Seu navegador não tem suporte ao canvas!
+		Atualize seu navegador.
+	</canvas>
+	<script>
+		var tela = document.getElementsByTagName("canvas")[0];
+		var ctx = tela.getContext("2d");
+		var fps = 50;
+		var dt = 1/fps;
+
+		var pc = new Sprite();
+		var inimigo = new Sprite();
+		inimigo.x = 250;
+		inimigo.y = 15;
+		inimigo.ay = 100;
+		inimigo.restricoes = function () {
+			if(this.y>tela.height+15){
+				this.y = -30-Math.random()*50;
+				this.vy = 50-Math.random()*20;
+				this.vx = 0;
+			}
+			this.ax = 0.8*(pc.x-this.x);
+			this.ay = 0.8*(pc.y-this.y);
+		}
+
+		var tiro = new Sprite();
+		tiro.y =  -12000;
+		tiro.desenhar = function(){
+			ctx.fillStyle = "rgb(150, 150, 250)";
+			ctx.strokeStyle = "rgb(50, 50, 150)";
+			ctx.lineWidth = 2;
+
+			ctx.beginPath();
+			ctx.arc(this.x, this.y, 3, 0, 2*Math.PI);
+			ctx.closePath();
+			ctx.fill();
+			ctx.stroke();
+		}
+		tiro.restricoes = function () {};
+
+
+		function Sprite(){
+	 		this.x = 110;
+	 		this.y = 115;
+	 		this.vx = 0;
+	 		this.ax = 0;
+	 		this.vy = 0;
+	 		this.ay = 0;
+ 		}
+ 		
+ 		Sprite.prototype.mover = function (){
+ 			this.vx = this.vx + this.ax*dt;
+ 			this.x = this.x + this.vx*dt;
+ 			this.vy = this.vy + this.ay*dt;
+ 			this.y = this.y + this.vy*dt;
+ 		}
+
+ 		Sprite.prototype.desenhar = function (){
+
+			ctx.fillStyle = "rgb(250, 200, 200)";
+			ctx.strokeStyle = "rgb(150, 50, 50)";
+			ctx.lineWidth = 3;
+
+			ctx.beginPath();
+			ctx.arc(this.x, this.y, 15, 0, 2*Math.PI);
+			ctx.closePath();
+			ctx.fill();
+			ctx.stroke();
+		}
+
+		Sprite.prototype.restricoes = function(){
+			if(this.x<15){
+				this.x = 15;
+				this.vx = 0;
+				this.ax = 0;
+			}
+			if(this.x>tela.width-15) {
+				this.x=tela.width-15;
+				this.vx = 0;
+				this.ax = 0;
+			}
+			if(this.y<15){
+				this.y = 15;
+				this.vy = 0;
+				this.ay = 0;
+			}
+			if(this.y>tela.height-15) {
+				this.y=tela.height-15;
+				this.vy = 0;
+				this.ay = 0;
+			}
+		}
+
+		function passo(){
+			pc.mover();
+			inimigo.mover();
+			tiro.mover();
+
+			pc.restricoes();
+			inimigo.restricoes();
+			tiro.restricoes();
+
+			//Limpar a tela
+ 			ctx.clearRect(0,0, tela.width, tela.height);
+
+			inimigo.desenhar();
+			tiro.desenhar();
+			pc.desenhar();
+		}
+
+		function teclaPressionada(e){
+			console.log("Tecla Pressionada: " + e.keyCode);
+			switch(e.keyCode){
+				case 32:
+					if(tiro.y < -10){
+						tiro.x = pc.x;
+						tiro.y = pc.y;
+						tiro.vy = -200;
+					}
+				break;
+				case 37:
+					pc.ax = -300;					
+				break;
+				case 39:
+					pc.ax = 300;					
+				break;
+				case 38:
+					pc.ay = -300;					
+				break;
+				case 40:
+					pc.ay = 300;					
+				break;
+			}
+
+		}
+
+		function teclaSolta(e){
+			console.log("Tecla Solta: " + e.keyCode);
+			switch(e.keyCode){
+				case 37:
+				case 39:
+					pc.ax = 0;					
+				break;
+				case 38:
+				case 40:
+					pc.ay = 0;					
+				break;
+			}
+		}
+
+		setInterval(passo, 1000/fps);
+		addEventListener("keydown", teclaPressionada);
+		addEventListener("keyup", teclaSolta);
+
+
+
+	</script>
+	</body>
+</html>
+
+
+
+
+
+

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8" />
+      <title>Moon Lander</title>
+      <style>
+         canvas {
+            border: 1px solid black;
+         }
+         body{
+            width: 500px;
+            margin: auto;
+         }
+      </style>
+   </head>
+   <body>
+   <h1>Moon Lander</h1>
+   <canvas width="498" height="300">
+      Seu navegador não tem suporte ao canvas!
+      Atualize seu navegador.
+   </canvas>
+   <script>
+      var tela = document.getElementsByTagName("canvas")[0];
+      var ctx = tela.getContext("2d");
+      var fps = 50;
+      var dt = 1/fps;
+      var GY = 200;
+      var VY_MAX = 80;
+      var E_MAX = 1000;
+      var B_MAX = 40;
+      var b = 20;
+
+      var pc = new Sprite();
+      pc.e = E_MAX;
+      pc.vidas = 3;
+      pc.consumo = 0;
+
+
+      function Sprite() {
+          this.x = 110;
+          this.y = 115;
+          this.vx = 0;
+          this.ax = 0;
+          this.vy = 0;
+          this.ay = 0;
+       }
+       
+       Sprite.prototype.mover = function () {
+          this.vx = this.vx + this.ax*dt;
+          this.x = this.x + this.vx*dt;
+          this.vy = this.vy + (this.ay + GY)*dt;
+          this.y = this.y + this.vy*dt;
+          this.e = this.e - (100/300)*(Math.abs(this.ax)+Math.abs(this.ay))*dt;
+       }
+
+       Sprite.prototype.desenhar = function () {
+
+         ctx.fillStyle = "rgb(250, 200, 200)";
+         ctx.strokeStyle = "rgb(150, 50, 50)";
+         ctx.lineWidth = 3;
+
+         ctx.beginPath();
+         ctx.arc(this.x, this.y, 15, 0, 2*Math.PI);
+         ctx.closePath();
+         ctx.fill();
+         ctx.stroke();
+      }
+
+      Sprite.prototype.restricoes = function() {
+         if(this.x<15) {
+            this.x = 15;
+            this.vx = 0;
+            this.ax = 0;
+         }
+         if(this.x>tela.width-15) {
+            this.x=tela.width-15;
+            this.vx = 0;
+            this.ax = 0;
+         }
+         if(this.y<15) {
+            this.y = 15;
+            this.vy = 0;
+            this.ay = 0;
+         }
+         if(this.y>tela.height-15) {
+            
+            if((this.vy<VY_MAX) && (b <=this.x && this.x <= b+B_MAX)){
+               this.y=tela.height-15;
+               this.vy = 0;
+               this.ay = 0;
+               this.vx = 0;
+               this.ax = 0;
+               b = 100+400*Math.random();
+               return;
+            }
+            console.log("Boom!"+this.vy+" x:"+this.x+" y: "+(b+B_MAX));
+            this.vidas--;
+            this.y = 20;
+            this.vy = 0;
+            this.vx = 0;
+            this.x = 100+200*Math.random();
+         }
+         if(this.e<=0){
+            this.e = 0;
+            this.ax = 0;
+            this.ay = 0;
+         }
+      }
+
+      function passo() {
+         pc.mover();
+
+         pc.restricoes();
+
+         //Limpar a tela
+          ctx.clearRect(0,0, tela.width, tela.height);
+
+         pc.desenhar();
+         desenhaPlacar();
+         desanhaBase();
+      }
+
+      function teclaPressionada(e) {
+         //console.log("Tecla Pressionada: " + e.keyCode);
+         switch(e.keyCode) {
+            case 32:
+               break;
+            case 37:
+               pc.ax = -300;
+               break;
+            case 39:
+               pc.ax = 300;               
+               break;
+            case 38:
+               pc.ay = -300;               
+               break;
+            case 40:
+               pc.ay = 300;               
+               break;
+         }
+
+      }
+
+      function teclaSolta(e) {
+         //console.log("Tecla Solta: " + e.keyCode);
+         switch(e.keyCode) {
+            case 37:
+            case 39:
+               pc.ax = 0;               
+            break;
+            case 38:
+            case 40:
+               pc.ay = 0;               
+            break;
+         }
+      }
+
+      setInterval(passo, 1000/fps);
+      addEventListener("keydown", teclaPressionada);
+      addEventListener("keyup", teclaSolta);
+
+      function desenhaPlacar(){
+         ctx.fillStyle = "black";
+         ctx.strokeStyle = "black";
+         ctx.lineWidth = 1;
+         ctx.font = "15px Arial";
+         escreve("Vidas: "+pc.vidas, 10, 30);
+         escreve("Energia: "+pc.e, 10, 50);
+         escreve("Velocidade: "+Math.round(pc.vy/VY_MAX*100)+"%", 10, 70);
+      }
+      function escreve(texto, x, y){
+         ctx.fillText(texto, x, y);
+         ctx.strokeText(texto, x, y);
+      }
+      function desanhaBase(){
+         ctx.fillStyle = "green";
+         ctx.strokeStyle = "black";
+         ctx.fillRect(b,tela.height-5, B_MAX, 5);
+         ctx.strokeRect(b,tela.height-5, B_MAX, 5);
+      }
+   </script>
+   </body>
+</html>
+
+
+
+
+
+

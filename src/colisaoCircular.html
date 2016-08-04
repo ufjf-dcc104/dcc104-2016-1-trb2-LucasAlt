@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Colisão Circular</title>
+		<style>
+			canvas {
+				border: 1px solid black;
+			}
+			body{
+				width: 500px;
+				margin: auto;
+			}
+		</style>
+	</head>
+	<body>
+	<h1>Colisão Circular</h1>
+	<canvas width="498" height="300">
+		Seu navegador não tem suporte ao canvas!
+		Atualize seu navegador.
+	</canvas>
+	<script>
+		var tela = document.getElementsByTagName("canvas")[0];
+		var ctx = tela.getContext("2d");
+		var fps = 50;
+		var dt = 1/fps;
+
+		var pc = new Sprite();
+		pc.danificado = 0;
+
+		var tiros = [];
+		var inimigos = [];
+		var excluir = [];
+		function criaInimigo(x, y){
+			var inimigo = new Sprite();
+			inimigo.x = x;
+			inimigo.y = y;
+			inimigo.ay = 100;
+			inimigo.restricoes = function () {
+				if(this.y>tela.height+15){
+					this.x = pc.x+50-Math.random()*100;
+					this.y = -30-Math.random()*150;
+					this.vy = 50-Math.random()*20;
+					this.vx = 0;
+				}
+				this.ax = 0.8*(pc.x-this.x);
+				//this.ay = 0.8*(pc.y-this.y);
+			};
+			return inimigo;
+		}
+		for (var i = 0; i < 10; i++) {
+			inimigos.push(criaInimigo(100+20*i, -40*i));
+		}
+
+		var tiro = new Sprite();
+		tiro.y =  -12000;
+		tiro.raio = 3;
+		tiro.cor = 'yellow';
+
+		tiro.restricoes = function () {};
+
+
+		function Sprite(){
+	 		this.x = 110;
+	 		this.y = 115;
+			this.raio = 15;
+	 		this.vx = 0;
+	 		this.ax = 0;
+	 		this.vy = 0;
+	 		this.ay = 0;
+			this.cor = 'lightgrey';
+ 		}
+
+ 		Sprite.prototype.mover = function (){
+ 			this.vx = this.vx + this.ax*dt;
+ 			this.x = this.x + this.vx*dt;
+ 			this.vy = this.vy + this.ay*dt;
+ 			this.y = this.y + this.vy*dt;
+ 		}
+
+ 		Sprite.prototype.desenhar = function (){
+
+			ctx.fillStyle = this.cor;
+			ctx.strokeStyle = "rgb(150, 50, 50)";
+			ctx.lineWidth = 3;
+
+			ctx.beginPath();
+			ctx.arc(this.x, this.y, this.raio, 0, 2*Math.PI);
+			ctx.closePath();
+			ctx.fill();
+			ctx.stroke();
+		}
+
+		Sprite.prototype.restricoes = function(){
+			if(this.x<15){
+				this.x = 15;
+				this.vx = 0;
+				this.ax = 0;
+			}
+			if(this.x>tela.width-15) {
+				this.x=tela.width-15;
+				this.vx = 0;
+				this.ax = 0;
+			}
+			if(this.y<15){
+				this.y = 15;
+				this.vy = 0;
+				this.ay = 0;
+			}
+			if(this.y>tela.height-15) {
+				this.y=tela.height-15;
+				this.vy = 0;
+				this.ay = 0;
+			}
+		}
+
+		Sprite.prototype.colidiuComCircular = function (alvo) {
+			var distancia = Math.sqrt(
+						Math.pow(alvo.x - this.x, 2)+
+						Math.pow(alvo.y - this.y, 2)
+			);
+			return distancia<(alvo.raio+this.raio);
+		};
+
+		pc.desenhar = function (){
+			if(this.danificado>0){
+				ctx.fillStyle = 'red';
+			} else {
+				ctx.fillStyle = this.cor;
+			}
+			this.danificado -= dt;
+			ctx.strokeStyle = "rgb(150, 50, 50)";
+			ctx.lineWidth = 3;
+
+			ctx.beginPath();
+			ctx.arc(this.x, this.y, this.raio, 0, 2*Math.PI);
+			ctx.closePath();
+			ctx.fill();
+			ctx.stroke();
+		}
+
+
+		function passo(){
+			pc.mover();
+			for (var i in inimigos) {
+				inimigos[i].mover();
+			}
+			tiro.mover();
+
+			pc.restricoes();
+			for (var i in inimigos) {
+				inimigos[i].restricoes();
+			}
+			tiro.restricoes();
+
+			//Limpar a tela
+ 			ctx.clearRect(0,0, tela.width, tela.height);
+
+			for (var i in inimigos) {
+				inimigos[i].desenhar();
+			}
+			tiro.desenhar();
+			pc.desenhar();
+			for (var i in inimigos) {
+				if(pc.danificado<=0 && pc.colidiuComCircular(inimigos[i])){
+					pc.danificado = 2;
+					inimigos[i].y = 1200;
+				}
+				if(tiro.colidiuComCircular(inimigos[i])){
+					inimigos[i].y = 1200;
+					excluir.push(inimigos[i]);
+					tiro.y = -1200;
+				}
+			}
+			for(var e in excluir){
+				inimigos.splice(inimigos.indexOf(excluir[e]),1);
+			}
+			excluir = [];
+
+		}
+
+		function teclaPressionada(e){
+			console.log("Tecla Pressionada: " + e.keyCode);
+			switch(e.keyCode){
+				case 32:
+					if(tiro.y < -10){
+						tiro.x = pc.x;
+						tiro.y = pc.y;
+						tiro.vy = -200;
+					}
+				break;
+				case 37:
+					pc.ax = -300;
+				break;
+				case 39:
+					pc.ax = 300;
+				break;
+				case 38:
+					pc.ay = -300;
+				break;
+				case 40:
+					pc.ay = 300;
+				break;
+			}
+
+		}
+
+		function teclaSolta(e){
+			console.log("Tecla Solta: " + e.keyCode);
+			switch(e.keyCode){
+				case 37:
+				case 39:
+					pc.ax = 0;
+					break;
+				case 38:
+				case 40:
+					pc.ay = 0;
+				break;
+			}
+		}
+
+		setInterval(passo, 1000/fps);
+		addEventListener("keydown", teclaPressionada);
+		addEventListener("keyup", teclaSolta);
+
+
+
+	</script>
+	</body>
+</html>

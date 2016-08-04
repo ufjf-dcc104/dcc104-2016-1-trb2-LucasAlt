@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script  src="ImageResources.js" />
+  </head>
+  <body>
+    <canvas></canvas>
+    <script>
+    var imgLib = new ImageResources();
+    imgLib.addImage("ship", "img/player_ship.png");
+    imgLib.addImage("enemy1", "img/enemy_1.png");
+
+    var tela = document.getElementsByTagName("canvas")[0];
+    var ctx = tela.getContext('2d');
+    (function desenha(){
+      if(!imgLib.isReady()){
+        setTimeout(desenha, 0);
+      }else{
+        imgLib.drawRotatedScale(ctx, "ship", 150, 75, 32, 32, Math.PI/4, 2.5);
+      }
+    })();
+    </script>
+  </body>
+</html>

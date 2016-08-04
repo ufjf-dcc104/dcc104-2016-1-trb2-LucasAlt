@@ -1,0 +1,543 @@
+https://www.gamefaqs.com/gba/924948-game-boy-wars-advance-12/faqs/33510
+
+
+
+The Advance Wars 2 Calculator Version 1.0
+by Samuel Wilder
+amalricantero@hotmail.com
+November 16, 2004
+
+#1 Contents
+
+Contents          1
+Version History   2
+Introduction      3
+Base Damage       4
+Offense Modifiers 5
+Defense Modifiers 6
+Calculation Rules 7
+Random Notes      8
+Credits           9
+
+#2 Version History
+11/16/04 - 1.0 Initial Version
+
+#3 Introduction
+
+Ever wanted to know how much damage units do to each other?  Or maybe you
+didn't want to waste that fuel in fog of war just to see a 10%?  Then you can
+use this guide to calculate your numbers in advance!
+
+You can skip to certain parts by using the # and the digit listed in the
+contents.  To get to Introduction, for instance, use #3.
+
+#4 Base Damage
+
+Infantry:
+vs.     Infantry  55
+        Mech      45
+        Recon     12
+        Tank       5
+        Md Tank    1
+        Neotank    1
+        APC       14
+        Artlry    15
+        Rockets   25
+        A-Air      5
+        Missiles  25
+        B Cptr     7
+        T Cptr    30
+        Pipe 1
+Mech:
+vs.     Infantry  65
+        Mech      55
+        Recon     85
+        Tank      55
+        Md Tank   15
+        Neotank   15
+        APC       75
+        Artlry    70
+        Rockets   85
+        A-Air     65
+        Missiles  85
+        B Cptr     9
+        T Cptr    35
+        Pipe      15
+Recon:
+vs.     Infantry  70
+        Mech      65
+        Recon     35
+        Tank       6
+        Md Tank    1
+        Neotank    1
+        APC       45
+        Artlry    45
+        Rockets   55
+        A-Air      4
+        Missiles  28
+        B Cptr    10
+        T Cptr    35
+        Pipe       1
+Tank:
+vs.     Infantry  75
+        Mech      70
+        Recon     85
+        Tank      55
+        Md Tank   15
+        Neotank   15
+        APC       75
+        Artlry    70
+        Rockets   85
+        A-Air     65
+        Missiles  85
+        B Cptr    10
+        T Cptr    40
+        B Ship     1
+        Lander    10
+        Cruiser    5
+        Sub        1
+        Pipe      15
+Md Tank:
+vs.     Infantry 105
+        Mech      95
+        Recon    105
+        Tank      85
+        Md Tank   55
+        Neotank   45
+        APC      105
+        Artlry   105
+        Rockets  105
+        A-Air    105
+        Missiles 105
+        B Cptr    12
+        T Cptr    45
+        B Ship    10
+        Lander    35
+        Cruiser   45
+        Sub       10
+        Pipe      55
+Neotank:
+vs.     Infantry 125
+        Mech     115
+        Recon    125
+        Tank     105
+        Md Tank   75
+        Neotank   55
+        APC      125
+        Artlry   115
+        Rockets  125
+        A-Air    115
+        Missiles 125
+        B Cptr    22
+        T Cptr    55
+        B Ship    15
+        Lander    40
+        Cruiser   50
+        Sub       15
+        Pipe      75
+Artlry:
+vs.     Infantry  90
+        Mech      85
+        Recon     80
+        Tank      70
+        Md Tank   45
+        Neotank   40
+        APC       70
+        Artlry    75
+        Rockets   80
+        A-Air     75
+        Missiles  80
+        B Ship    40
+        Lander    55
+        Cruiser   65
+        Sub       60
+        Pipe      45
+Rockets:
+vs.     Infantry  95
+        Mech      90
+        Recon     90
+        Tank      80
+        Md Tank   55
+        Neotank   50
+        APC       80
+        Artlry    80
+        Rockets   85
+        A-Air     85
+        Missiles  90
+        B Ship    55
+        Lander    60
+        Cruiser   85
+        Sub       85
+        Pipe      55
+A-Air:
+vs.     Infantry 105
+        Mech     105
+        Recon     60
+        Tank      25
+        Md Tank   10
+        Neotank    5
+        APC       50
+        Artlry    50
+        Rockets   55
+        A-Air     45
+        Missiles  55
+        B Cptr   120
+        T Cptr   120
+        Fighter   65
+        Bomber    75
+        Pipe      10
+Missiles:
+vs.     B Cptr   120
+        T Cptr   120
+        Fighter  100
+        Bomber   100
+B Cptr:
+vs.     Infantry  75
+        Mech      75
+        Recon     55
+        Tank      55
+        Md Tank   25
+        Neotank   20
+        APC       60
+        Artlry    65
+        Rockets   65
+        A-Air     25
+        Missiles  65
+        B Cptr    65
+        T Cptr    95
+        B Ship    25
+        Lander    25
+        Cruiser   55
+        Sub       25
+        Pipe      25
+Fighter:
+vs.     B Cptr   100
+        T Cptr   100
+        Fighter   55
+        Bomber   100
+Bomber:
+vs.     Infantry 110
+        Mech     110
+        Recon    105
+        Tank     105
+        Md Tank   95
+        Neotank   90
+        APC      105
+        Artlry   105
+        Rockets  105
+        A-Air     95
+        Missiles 105
+        B Ship    75
+        Lander    95
+        Cruiser   85
+        Sub       95
+        Pipe      95
+B Ship:
+vs.     Infantry  95
+        Mech      90
+        Recon     90
+        Tank      80
+        Md Tank   55
+        Neotank   50
+        APC       80
+        Artlry    80
+        Rockets   85
+        A-Air     85
+        Missiles  90
+        B Ship    50
+        Lander    95
+        Cruiser   95
+        Sub       95
+        Pipe      55
+Cruiser:
+vs.     B Cptr   115
+        T Cptr   115
+        Fighter   55
+        Bomber    65
+        Sub       90
+Sub:
+vs.     B Ship    55
+        Lander    95
+        Cruiser   25
+        Sub       55
+
+Infantry = Infantry, Mech
+Direct Units = Recon, Tank, Md Tank, Neotank, A-Air, B Cptr, Fighter, Bomber,
+Cruiser, Sub
+Indirect Units = Artlry, Rockets, Missiles, B Ship
+Vehicles = Recon, Tank, Md Tank, Neotank, APC, Artlry, Rockets, A-Air, Missiles
+Air Units = B Cptr, T Cptr, Fighter, Bomber
+Naval Units = B Ship, Lander, Cruiser, Sub
+
+#5 Offense Modifiers
+
+Loss of hit points decrease damage by 10% per hit point lost
+For example, a unit with 5 hit points decreases damage by 50% (0.5)
+A unit with 8 hit points only decreases 20% (0.8)
+
+Andy increases all unit damage by 20% (1.2) using Hyper Upgrade
+
+Max increases direct unit damage by 20% (1.2)
+Max decreases indirect unit damage by 10% (0.9)
+Max increases direct unit damage by 40% (1.4) using Max Force
+Max increases direct unit damage by 60% (1.6) using Max Blast
+
+Sami increases infantry damage by 30% (1.3)
+Sami decreases direct unit damage by 10% (0.9)
+Sami increases infantry damage by 50% (1.5) using Double Time
+Sami increases infantry damage by 80% (1.8) using Victory March
+
+Grit increases indirect unit damage by 20% (1.2)
+Grit decreases direct unit damage by 20% (0.8)
+Grit increases indirect unit damage by 50% (1.5) using Snipe Attack or
+Super Snipe
+
+Colin decreases all unit damage by 10% (0.9)
+Colin increases all unit damage by 3% per 1000G (0.03 x G) using Power of Money
+
+Kanbei increases all unit damage by 30% (1.3)
+Kanbei increases all unit damage by 50% (1.5) using Morale Boost or Samurai
+Spirit
+
+Sensei increases infantry damage by 40% (1.4)
+Sensei increases B Cptr damage by 50% (1.5)
+Sensei decreases vehicle and naval unit damage by 10% (0.9)
+Sensei increases B Cptr damage by 75% (1.75) using Copter Command or Airborne
+Assault
+
+Eagle increases air unit damage by 15% (1.15)
+Eagle decreases naval unit damage by 30% (0.7)
+Eagle increases air unit damage by 30% (1.3) using Lightning Drive or Lightning
+Strike
+
+Drake decreases air unit damage by 30% (0.7)
+
+Jess increases vehicle damage by 10% (1.1)
+Jess decreases infantry, air, and naval unit damage by 10% (0.9)
+Jess increases vehicle damage by 30% (1.3) using Turbo Charge
+Jess increases vehicle damage by 50% (1.5) using Overdrive
+
+Lash increases all unit damage by 10% per star (1.1, 1.2, 1.3, 1.4)
+Lash doubles offense bunuses (1.2, 1.4, 1.6, 1.8) using Prime Tactics
+
+Hawke increases all unit damage by 10% (1.1)
+
+Sturm increases all unit damage by 20% (1.2)
+Sturm increases all unit damage by 40% (1.4) using Meteor Strike
+
+
+#6 Defense Modifiers
+
+Terrain reduces damage by 1% per hit point per star
+For example, a Mech with 6 hit points on a mountain (4 stars) reduces damage
+by 24% (0.76)
+A Tank with 8 hit points on a city (3 stars) also reduces damage by 24% (0.76)
+
+All COs reduce damage by 10% (0.9) when using CO powers or super CO powers if
+there is no other modifier listed
+
+Kanbei reduces damage for all units by 30% (0.7)
+Kanbei reduces damage for all units by 40% (0.6) using Morale Boost
+Kanbei reduces damage for all units by 60% (0.4) using Samurai Spirit
+
+Eagle reduces damage for air units by 10% (0.9)
+Eagle reduces damage for air units by 30% (0.7) using Lightning Drive or
+Lightning Strike
+
+Drake reduces damage for naval units by 10% (0.9)
+Drake reduces damage for naval units by 20% (0.8) using Tsunami or Typhoon
+
+Lash reduces damage for all units depending on how many stars the terrain has
+using Prime Tactics
+0 stars = 10% (0.9)
+1 star  = 15% (0.85)
+2 stars = 20% (0.8)
+3 stars = 30% (0.7)
+4 stars = 50% (0.5)
+This is in addition to the doubled star terrain bonus
+
+Sturm reduces damage for all units by 20% (0.8)
+Sturm reduces damage for all units by 50% (0.5) using Meteor Strike
+
+#7 Calculation Rules
+
+First, take the base damage of the attacking unit
+Then, multiply in any modifiers based on COs, terrain, HP, and powers in use
+Multiply them all separately, don't add them together and multiply once
+The final number, after dropping the decimal, should be the number shown on
+the attack
+
+Examples:
+Max attacks with a Tank against Kanbei's Mech unit on a mountain (4 stars)
+Initial damage is 70
+Max adds 20% (1.2) to the attack
+Terrain reduces damage by 40% (0.6)
+Kanbei reduces damage by 30% (0.7)
+Multiply 70 x 1.2 x 0.6 x 0.7
+Answer is 35.28, so the game should show 35%
+
+If Max's Tank had 7 HP, and Kanbei's Mech had 4 HP, it changes a bit
+Initial damage is still 70
+7 HP means only 70% attack power (0.7)
+Max still adds 20% (1.2)
+Terrain now reduces damage by 16% (0.84) because of the Mech's 4 HP
+Kanbei still reduces damage by 30% (0.7)
+Multiply 70 x 0.7 x 1.2 x 0.84 x 0.7
+Answer is 34.5744, so the game should show 34%
+
+If they also use their super CO powers (Kanbei used his last turn, Max this
+turn)
+Initial damage 70
+7 HP = 70% (0.7)
+Max adds 60% (1.6) for using Max Blast
+Terrain 4 HP x 4 stars is 16% (0.84)
+Kanbei reduces by 60% (0.4) for using Samurai Spirit
+Multiply 70 x 0.7 x 1.6 x 0.84 x 0.4
+Answer is 26.3424 so the game should show 26%
+
+Multiplication order isn't important, but you need to choose the correct
+modifiers
+Only Colin uses both his original modifier when he uses Power of Money
+Others don't add their original modifier using Co or Super CO powers
+
+#8 Random Notes
+
+Sometimes the calculation is off by 1%, and I haven't figured out why yet.
+
+Remember that this only calculates the percentage shown, not actual damage,
+so using it to predict counter damage isn't always reliable.
+
+Nell does more than the shown percentage sometimes, but I don't have any idea
+how to calculate it.
+
+Sonja does less damage than the shown percentage sometimes, unless she's using
+Counter Break, but I don't know how to calculate it.
+
+I have not extensively tested Colin's offense bonus with Power of Money, and
+it may be WAY off for some numbers
+
+I have not extensively tested Lash's defense bonus with Prime Tactics, because
+it seems to be different for different HP values
+
+#9 Credits
+
+All trademarks and copyrights contained in this document are owned by their
+respective trademark and copyright holders.
+
+Copyright 2004 Samuel Wilder
+Please do not post this without my prior consent.  Currently, it should only
+be posted at http://gamefaqs.com
+Feel free to use it for your own private calculations.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+http://z9.invisionfree.com/AW2_Debate_and_CCO/ar/t2181.htm
+
+
+
+
+
+
+
+
+
+Damage formula:
+This is used to calculate the damage shown when attacking an enemy unit with your own unit.
+
+( ( ( ( ( ( IA * BD ) * AN ) * ID ) * DN ) * AH) * (( 100 - TC * DH ) / 100) )
+
+Note that the value inside each parenthesis must be rounded down.
+
+IA = Attacking unit's inherent firepower
+:::This will vary depending on the CO you use. For instance, Max's direct attacks are 50% stronger resulting in an IA of 1.5. On the other hand Grit has a 20% decrease in direct attacks and has an IA of 0.8. Values out of and during powers can be found in my CO FAQ. Note that some COs have an increase of their inherent firepower during power.:::
+
+BD = Base damage
+::: this is the damage percentage shown when IA, AN, ID, DN, AH and DH are worth 1 while TC is worth 0. It can be obtained by matching Andy with other Andy units, units being full health and being on terrain providing no terrain stars. The base of our calculation for which you can find the values in the Unit FAQ.:::
+
+AN = Attacking unit's norm
+:::As explained in my CO FAQ, out of power, all COs have a norm for defence and for offence of 1. However most COs will acquire a norm of 1.1 when attacking and a norm of 0.9 when defending. Exceptions are Sturm, Kanbei which both keep a norm of 1 and Eagle, whose norm is 0.8 when attacking and 1.3 when defending.:::
+
+ID = Defending unit's inherent defence
+:::This will vary depending on the COs in the same way as IA. Check the FAQ.:::
+
+DN = Defending unit's norm
+::: See AN explanation: 1 for all COs out of power, 1 for Sturm and Kanbei in Power, 1.3 for Eagle in Power and 0.9 for all the other COs.:::
+
+AH = Attacking unit's HP
+:::A unit has 10 HP when deployed and it isn't shown, however it will lose some in the course of battle and the HP left is displayed over the unit. Don't forget that the value AH is a fraction out of the maximum of HP: 10.:::
+
+TC = Terrain cover
+:::Over certain terrain, units can acquire defence. The efficiency of the increase in defence is displayed through stars. Each star represents a 10% decrease in damage taken. A 4 star terrain, like an HQ or a Mountain will thus have a TC value of 40. A 3 star terrain 30, etc.:::
+
+DH = Defending unit's HP
+:::However, the efficiency of the terrain cover is directly proportional to the HP of the defending unit. This is calculated in the same way as AH except the HP is taken off the defending unit.:::
+
+For example:
+Let's say I've got a 4 HP Max Tank (which still have primary weapon ammo) attacking during Power a 7 HP Kanbei recon which is also in Power mode and over a City.
+
+IA is 1.70 as that is Max's inherent firepower in Power.
+BD is 85 as the Tank still has ammo. Otherwise it would have been 40 as can be found in the unit guide.
+AN is 1.1 as Max has a 1.1 norm in Power.
+ID is 0.7 as Kanbei's defence decreases enemy attacks by 30% during Power.
+DN is 1 as Kanbei has a 1 norm at all times.
+AH is 0.4 as Max's Tank has got 4/10 HP.
+TC is 30 as City provide 3 cover star.
+DH is 0.7 as Kanbei's recon has 7 HP left.
+
+1.7 * 85 rounded down = 144
+144 * 1.1 rounded down = 158
+158 * 0.7 rounded down = 110
+110 * 1 rounded down = 110
+110 * 0.4 rounded down = 44
+
+Now for the terrain cover defence:
+100 - 30 * 0.7 rounded down and divided by 100 = 0.79
+
+44 * 0.79 rounded down 34%
+This means that the Max Tank will display a 34% damage percentage when wanting to fire a Kanbei recon in the previous given conditions.
+
+As you can see the formula is rather complicated and while I've not tested it out with every possible matchups and situations, I've built it from scrap from a couple of hypothesis and some testing which enabled me to find the right order in which the different values are ordered.
+
+____________________________________________________________________________________________________
+
+
+Damage Formula during counterattacks:
+Some might have noticed that counterattacks are weaker than they should be. Seriously match up Max against Max, Recons against A-Air and you will notice a fair difference between the amount of damage predicted when you take first strike and the amount of damage done when counterattacking with the same unit. Especiallly when the battle conditions don't seem to have changed at all.
+
+Well there is a difference and that difference lies in the health mechanics:
+When we look at a unit we see a certain value determining it's health and used to calculate damage done when taking first strike. When we look at a unit in combat we notice a health bar which seems to fluctuate for the same HP. At the same time we notice that damage predicted isn't always the damage done. A 55% prediction can turn out to deal 5 or 6 HP damage.
+
+When hacking AW2 we've been able to find random damage values and see the difference between when it was turned on or off and the results depending on its value.
+
+Well simply put, this is my hypothesis: the health bar contains 100 parts for each decrease of 10 parts the unit shows a loss of 1 HP. Some have additionally noticed that a 55% damage usually resulted half the time in a 6 damage value and half the time in a 5 damage value. This is random damage. The damage prediction shows the actual minimal damage done and most COs have a random factor which can add up to 9% damage. This means that a 55% damage can result in 55, 56, 57, 58, 59, 60, 61, 62, 63, 64 damage done to the 100 health bar. As you can see, 5 of the values will result in 5 damage and the 5 other result in 6 damage, however, the unit countering will counter with its actual health. A unit countering with 5 HP but which has really taken 59% damage will have an AH of 0.41 instead of 0.5 which it would have had if it were taking first strike.
+
+Note that some COs have special luck values. Sonja also has bad luck, and trusting her AW2 value, that means she has 2 random values to add to her damage: one is positive and can reach up to 9 and the other is negative and can also reach up to 9. This means that she'll randomly deal less damage than predicted at up to -9 of damage if she maxes her bad luck and minimizes her good luck. Nell on the other hand is lucky. She's used to dealing even greater amount of positive damage. +19 in AW2.
+
+Additionally while bad luck didn't seem affected by anything, good luck was affected by the attacking unit's HP, and the opponent's defence. However, the damage formula has changed from AW to AW2 and while I'm sure luck is proportional to HP, I've yet to do testing with enemy defence. 
