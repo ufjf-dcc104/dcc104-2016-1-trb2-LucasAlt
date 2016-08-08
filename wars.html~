@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Eaf Wars</title>
+    <script  src="src/AudioResources.js" ></script>
+    <script  src="src/ImageResources.js" ></script>
+  </head>
+  <body>
+	<h1>Eaf Wars</h1>
+    <canvas width="600" height="320">
+			Seu navegador não tem suporte ao canvas!
+			Atualize seu navegador.
+	</canvas>
+    <script>
+		
+		var imgLib = new ImageResources();
+		imgLib.addImage("red_units", "img/advwars_units_red.png");
+		imgLib.addImage("blue_units", "img/advwars_units_blue.png");
+		imgLib.addImage("green_units", "img/advwars_units_green.png");
+		imgLib.addImage("yellow_units", "img/advwars_units_yellow.png");
+		imgLib.addImage("red_structures", "img/advwars_tiles_red.png");
+		imgLib.addImage("blue_structures", "img/advwars_tiles_blue.png");
+		imgLib.addImage("green_structures", "img/advwars_tiles_green.png");
+		imgLib.addImage("yellow_structures", "img/advwars_tiles_yellow.png");
+		imgLib.addImage("neutral_structures", "img/advwars_tiles_neutral.png");
+
+		// DEFs
+		var tela = document.getElementsByTagName("canvas")[0];
+		var ctx = tela.getContext("2d");
+		var fps = 60;
+		var dt = 1/fps;
+		var started = false;
+		var win = 0;
+		var gridWidth = 480;
+		var gridHeight = 320;
+		var max_HP = 10;
+		var Units = [];
+		var Terrains = [];
+		var Players = [];
+		var MoveTypes = ["Light Foot", "Heavy Foot", "Tires", "Treads", "Ship", "Trans", "Air"];
+		var bg;
+		var excluir = [];
+		
+		
+		// CLASSES
+		function Unit(id, name, cost, fuel, vision, type, moviment, movType, mainWeapon, mwMinRange, mwMaxRange, Ammo, secWeapon, matchup, imgx, imgy, capturer, cargo, fpt){
+			this.id = id;
+			this.name = name;
+			this.cost = cost;
+			this.fuel = fuel;
+			this.vision = vision;
+			this.type = type;
+			this.moviment = moviment;
+			this.movType = movType;
+			this.mainWeapon = mainWeapon;
+			this.mwMinRange = mwMinRange;
+			this.mwMaxRange = mwMaxRange;
+			this.Ammo = Ammo;
+			this.secWeapon = secWeapon;
+			this.matchup = matchup;
+			this.imgx = imgx;
+			this.imgy = imgy;
+			this.capturer = capturer;
+			this.cargo = cargo;
+			this.fpt = fpt;
+			
+			this.info = function(){
+				console.log("name: " + this.name);
+				console.log("cost: " + this.cost);
+				console.log("fuel: " + this.fuel);
+				console.log("fuel per turn: " + this.fpt);
+				console.log("vision: " + this.vision);
+				console.log("type: " + this.type);
+				console.log("moviment: " + this.moviment);
+				console.log("mov. type: " + MoveTypes[this.movType]);
+				console.log("main weapon: " + this.mainWeapon + "\t" + this.Ammo + "\t" + this.mwMinRange + "-" + this.mwMaxRange);
+				for(var i = 0; i < Units.length; i++)
+					if(this.matchup[i] != 0)
+						console.log("\tvs " + Units[i].name + ": " + this.matchup[i]);
+				console.log("sec. weapon: " + this.secWeapon);
+				for(var i = 0; i < Units.length; i++)
+					if(this.matchup[i+Units.length] != 0)
+						console.log("\tvs " + Units[i].name + ": " + this.matchup[i+Units.length]);
+				if(this.capturer) 
+					console.log("capturer.");
+				if(this.cargo.length != 0){
+					console.log("cargo for: ");
+					for(var i in this.cargo)
+						console.log("\t" + Units[this.cargo[i]].name);
+				}
+			};
+		}
+		
+		Units.push( new Unit(0, "Infantry", 1000, 99, 2, "Land", 3, 0, "None", 0, 0, 0, "Machine Gun",
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 55, 45, 12, 5, 1, 1, 14, 15, 25, 5, 25, 0, 0, 0, 0, 0, 0, 7, 30], 4, 490, true, [], 0) );
+		Units.push( new Unit(1, "Mech", 3000, 70, 2, "Land", 2, 1, "Bazooka", 1, 1, 3, "Machine Gun", 
+		[0, 0, 85, 55, 15, 15, 75, 70, 85, 65, 85, 0, 0, 0, 0, 0, 0, 0, 0, 65, 55, 18, 6, 1, 1, 20, 32, 35, 6, 32, 0, 0, 0, 0, 0, 0, 9, 35 ], 4, 544, true, [], 0) );
+		Units.push( new Unit(2, "Recon", 4000, 80, 5, "Land", 8, 2, "None", 0, 0, 0, "Machine Gun", 
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 65, 35, 6, 1, 1, 45, 45, 55, 4, 28, 0, 0, 0, 0, 0, 0, 10, 35], 4, 58, false, [], 0) );
+		Units.push( new Unit(3, "Tank", 7000, 70, 3, "Land", 6, 3, "Cannon", 1, 1, 9, "Machine Gun", 
+		[0, 0, 85, 55, 15, 15, 75, 70, 80, 65, 80, 1, 5, 10, 1, 0, 0, 0, 0, 75, 70, 40, 6, 1, 1, 45, 45, 55, 6, 30, 0, 0, 0, 0, 0, 0, 10, 40], 4, 112, false, [], 0) );
+		Units.push( new Unit(4, "Md Tank", 16000, 50, 1, "Land", 5, 3, "Cannon", 1, 1, 8, "Machine Gun", 
+		[0, 0, 105, 85, 55, 45, 105, 105, 105, 105, 105, 10, 45, 35, 10, 0, 0, 0, 0, 105, 95, 45, 8, 1, 1, 45, 45, 55, 10, 35, 0, 0, 0, 0, 0, 0, 12, 45], 4, 166, false, [], 0) );
+		Units.push( new Unit(5, "Neotank", 22000, 99, 1, "Land", 6, 3, "New Cannon", 1, 1, 9, "Machine Gun", 
+		[0, 0, 125, 105, 75, 55, 125, 115, 125, 115, 125, 15, 50, 50, 15, 0, 0, 0, 0, 125, 115, 65, 10, 1, 1, 45, 65, 75, 17, 55, 0, 0, 0, 0, 0, 0, 22, 55], 4, 220, false, [], 0) );
+		Units.push( new Unit(6, "APC", 5000, 70, 1, "Land", 6, 3, "None", 0, 0, 0, "None", 
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 4, 4, false, [0,1], 0) );
+		Units.push( new Unit(7, "Artillery", 7000, 50, 1, "Land", 5, 3, "Cannon", 2, 3, 9, "None", 
+		[90, 85, 80, 70, 45, 40, 70, 75, 80, 75, 80, 40, 65, 55, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 4, 274, false, [], 0) );
+		Units.push( new Unit(8, "Rockets", 15000, 50, 1, "Land", 5, 2, "Rockets", 3, 5, 6, "None",
+		[95, 90, 90, 80, 55, 50, 80, 80, 85, 85, 90, 55, 85, 60, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 4, 328, false, [], 0) );
+		Units.push( new Unit(9, "Anti-Air", 8000, 60, 2, "Land", 6, 3, "Vulcan", 1, 1, 9, "None", 
+		[105, 105, 60, 25, 10, 5, 50, 50, 55, 45, 55, 0, 0, 0, 0, 120, 120, 120, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 4, 382, false, [], 0) );
+		Units.push( new Unit(10, "Missiles", 12000, 50, 5, "Land", 4, 2, "Missiles", 3, 5, 6, "None", 
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 120, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 4, 436, false, [], 0) );
+		Units.push( new Unit(11, "Battle Ship", 28000, 99, 2, "Sea", 5, 4, "Cannon", 2, 6, 9, "None", 
+		[95, 90, 90, 80, 55, 50, 80, 80, 85, 85, 90, 50, 95, 95, 95, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 384, 220, false, [], 1) );
+		Units.push( new Unit(12, "Cruiser", 18000, 99, 3, "Sea", 6, 4, "Missiles", 1, 1, 9, "Anti-Air Gun", 
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 55, 65, 115, 115], 384, 274, false, [17, 18], 1) );
+		Units.push( new Unit(13, "Lander", 12000, 99, 1, "Sea", 6, 5, "None", 0, 0, 0, "None", 
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 384, 328, false, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 1) );
+		Units.push( new Unit(14, "Submarine", 20000, 60, 5, "Sea", 5, 4, "Torps", 1, 1, 6, "None", 
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 55, 25, 95, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 384, 382, false, [], 1) );
+		Units.push( new Unit(15, "Fighter", 20000, 99, 2, "Air", 9, 6, "Missiles", 1, 1, 9, "None", 
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 55, 100, 100, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 384, 4, false, [], 5) );
+		Units.push( new Unit(16, "Bomber", 22000, 99, 2, "Air", 7, 6, "Bombs", 1, 1, 9, "None", 
+		[110, 110, 105, 105, 95, 90, 105, 105, 105, 95, 105, 75, 85, 95, 95, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 384, 58, false, [], 5) );
+		Units.push( new Unit(17, "B Cptr", 9000, 99, 3, "Air", 6, 6, "Missiles", 1, 1, 6, "None", 
+		[0, 0, 55, 55, 25, 20, 60, 65, 65, 25, 65, 25, 55, 25, 25, 0, 0, 0, 0, 75, 75, 30, 6, 1, 1, 20, 25, 35, 6, 35, 0, 0, 0, 0, 0, 0, 65, 95], 384, 112, false, [], 1) );
+		Units.push( new Unit(18, "T Cptr", 5000, 99, 2, "Air", 6, 6, "None", 0, 0, 0, "None", 
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 384, 166, false, [0, 1], 2) );
+
+		function DeployedUnit(unitType, gridx, gridy, facing, team){
+			this.unitType = unitType;
+			this.HP = max_HP;
+			this.Ammo = Units[unitType].Ammo;
+			this.fuel = Units[unitType].fuel;
+			this.gridx = gridx;
+			this.gridy = gridy;
+			this.facing = facing;
+			this.transporting1 = null;
+			this.transporting2 = null;
+			this.team = team;
+			this.acted = true;
+			this.run = false;
+			this.capturin = false;
+
+			this.draw = function(x, y, mode){
+				if( this.team == 1 ){
+					imgLib.drawClipping(ctx, "red_units", Units[this.unitType].imgx, Units[this.unitType].imgy, 32, 32, x, y, 32, 32);
+				}else if( this.team == 2 ){
+					imgLib.drawClipping(ctx, "blue_units", Units[this.unitType].imgx, Units[this.unitType].imgy, 32, 32, x, y, 32, 32);
+				}else if( this.team == 3 ){
+					imgLib.drawClipping(ctx, "green_units", Units[this.unitType].imgx, Units[this.unitType].imgy, 32, 32, x, y, 32, 32);
+				}else if( this.team == 4 ){
+					imgLib.drawClipping(ctx, "yellow_units", Units[this.unitType].imgx, Units[this.unitType].imgy, 32, 32, x, y, 32, 32);
+				}
+			};
+		}
+
+		function Terrain(id, name, moveTable, imgx, imgy, defenceBonus, structure, income, menu, repairs, height){
+			this.id = id;
+			this.name = name;
+			this.moveTable = moveTable;
+			this.imgx = imgx;
+			this.imgy = imgy;
+			this.defenceBonus = defenceBonus;
+			this.structure = structure;
+			this.income = structure ? income : 0;
+			this.menu = menu;
+			this.repairs = repairs;
+			this.height = height;
+		}
+
+		Terrains.push( new Terrain(0, "Bridge", [1, 1, 1, 1, 200, 200, 1], 16, 18, 0, false, 0, false, [], 32) );
+		Terrains.push( new Terrain(1, "Forest", [1, 1, 3, 2, 200, 200, 1], 16, 56, 2, false, 0, false, [], 32) );
+		Terrains.push( new Terrain(2, "Mountain", [2, 1, 200, 200, 200, 200, 1], 92, 56, 4, false, 0, false, [], 32) );
+		Terrains.push( new Terrain(3, "Plain", [1, 1, 2, 1, 200, 200, 1], 130, 56, 1, false, 0, false, [], 32) );
+		Terrains.push( new Terrain(4, "HQ", [1, 1, 1, 1, 200, 200, 1], 16, 102, 4, true, 1000, false, ["Land"], 62) );
+		Terrains.push( new Terrain(5, "City", [1, 1, 1, 1, 200, 200, 1], 16, 170, 3, true, 1000, false, ["Land"], 40) );
+		Terrains.push( new Terrain(6, "Base", [1, 1, 1, 1, 200, 200, 1], 54, 170, 3, true, 1000, 1, ["Land"], 32) );
+		Terrains.push( new Terrain(7, "Airport", [1, 1, 1, 1, 200, 200, 1], 92, 170, 3, true, 1000, 2, ["Air"], 36) );
+		Terrains.push( new Terrain(8, "Port", [1, 1, 1, 1, 1, 1, 1], 130, 170, 3, true, 1000, 3, ["Sea"], 42) );
+		Terrains.push( new Terrain(9, "Road", [1, 1, 1, 1, 200, 200, 1], 48, 366, 0, false, 0, 0, [], 32) );
+		Terrains.push( new Terrain(10, "Sea", [200, 200, 200, 200, 1, 1, 1], 396, 474, 0, false, 0, 0, [], 32) );
+		Terrains.push( new Terrain(11, "Reef", [200, 200, 200, 200, 2, 2, 1], 738, 474, 1, false, 0, 0, [], 32) );
+		Terrains.push( new Terrain(12, "Shoal", [1, 1, 1, 1, 200, 1, 1], 548, 56, 0, false, 0, 0, [], 32) );
+		Terrains.push( new Terrain(13, "River", [2, 1, 200, 200, 200, 200, 1], 396, 398, 0, false, 0, 0, [], 32) );
+		
+		function Tile(terrainType, team){
+			this.terrainType = terrainType;
+			this.team = Terrains[this.terrainType].structure ? team : 0;
+			this.capture = Terrains[this.terrainType].structure ? 20 : null;
+
+			this.draw = function(x, y, mode){
+				var aux = Terrains[this.terrainType].height - 32;
+				if( this.team == 0){
+					imgLib.drawClipping(ctx, "neutral_structures", Terrains[this.terrainType].imgx, Terrains[this.terrainType].imgy, 32, 32+aux, x, y-aux, 32, 32+aux);
+				}else if( this.team == 1 ){
+					imgLib.drawClipping(ctx, "red_structures", Terrains[this.terrainType].imgx, Terrains[this.terrainType].imgy, 32, 32+aux, x, y-aux, 32, 32+aux);
+				}else if( this.team == 2 ){
+					imgLib.drawClipping(ctx, "blue_structures", Terrains[this.terrainType].imgx, Terrains[this.terrainType].imgy, 32, 32+aux, x, y-aux, 32, 32+aux);
+				}else if( this.team == 3 ){
+					imgLib.drawClipping(ctx, "green_structures", Terrains[this.terrainType].imgx, Terrains[this.terrainType].imgy, 32, 32+aux, x, y-aux, 32, 32+aux);
+				}else if( this.team == 4 ){
+					imgLib.drawClipping(ctx, "yellow_structures", Terrains[this.terrainType].imgx, Terrains[this.terrainType].imgy, 32, 32+aux, x, y-aux, 32, 32+aux);
+				}
+			};
+		}
+
+		function Player(name){
+			this.name = name;
+			this.money = 0;
+			this.numBases = 0;
+			this.income = 0;
+		}
+		
+		function textSize(txt, font){
+			var c = document.createElement('canvas');
+			var auxctx = c.getContext('2d');
+			auxctx.font = font;
+			return auxctx.measureText(txt).width;
+		}
+		
+		function Menu(texts, name){
+			this.name = name;
+			this.texts = texts;
+			this.index = 0;
+			this.size = texts.length;
+			this.select;
+
+			this.draw = function(x, y){
+				var font = "18px Arial";
+				var w = textSize(this.name, font);
+				for(var i in this.texts)
+					if(w < textSize(this.texts[i], font))
+						w = textSize(this.texts[i], font);
+				w += 15;
+				var h = 15 + texts.length*25;
+				ctx.fillStyle = "rgba(0,0,0,0.8)";
+				ctx.fillRect(x, y, w, h);
+				ctx.fillStyle = "white";
+				ctx.strokeStyle = "white";
+				ctx.lineWidth = 1;
+				ctx.font = font;
+				if(name) escreve(name, x+5, y+10);
+				var p = y + 25 + (this.name ? 10 : 0);
+				for(var t in texts){
+					escreve(texts[t], x+10, p);
+					if(t == this.index){
+						ctx.fillStyle = "aqua";
+						ctx.fillRect(x, p+3, w, 1);
+						ctx.fillRect(x, p-5, 1, 8);
+						ctx.fillStyle = "white";
+					}
+					p += 25;
+				}
+			};
+			this.up = function(){
+				this.index = Math.max(this.index - 1, 0);
+			};
+			this.down = function(){
+				this.index = Math.min(this.index + 1, this.size - 1);
+			};
+		}
+
+		function actionMenu(fire, capture, load, drop, supply, wait){
+			texts = [];
+			if(fire) texts.push("Fire");
+			if(capture) texts.push("Capture");
+			if(load) texts.push("Load");
+			if(drop) texts.push("Drop");
+			if(supply) texts.push("Supply");
+			if(wait) texts.push("Wait");
+			
+			var menu = new Menu(texts);
+			
+			menu.select = function(){
+				if(this.texts[this.index] == "Fire"){
+					bg.fire();
+				}else if(this.texts[this.index] == "Capture"){
+					bg.capture();
+				}else if(this.texts[this.index] == "Load"){
+					bg.load();
+				}else if(this.texts[this.index] == "Drop"){
+					bg.drop();
+				}else if(this.texts[this.index] == "Supply"){
+					bg.supply();
+				}else if(this.texts[this.index] == "Wait"){
+					bg.nothing();
+				}
+			};
+
+			return menu;
+		}
+		
+		function recruit(type, posx, posy, facing, team){
+			var sub = Players[team-1].money - Units[type].cost;
+			if(sub >= 0){
+				Players[team-1].money = sub;
+				return new DeployedUnit(type, posx, posy, facing, team);
+			}
+			return null;
+		}
+
+		function menuRecruit(type, posx, posy, facing, team, bg){
+			var name;
+			if(type == "Land")
+				name = "Base";
+			else if(type == "Sea")
+				name = "Port";
+			else if(type == "Air")
+				name = "Airport";
+				
+			var menu = new Menu([], name ) ;
+			var aux = [];
+			for(var u in Units){
+				if(Units[u].type == type){
+					menu.texts.push( Units[u].name + "\t" + Units[u].cost );
+					aux.push(u);
+				}
+			}
+			menu.size = aux.length;
+			menu.posx = posx;
+			menu.posy = posy;
+			menu.facing = facing;
+			menu.team = team;
+			menu.bg = bg;
+			menu.unit = aux;
+
+			menu.select = function(){
+				var rec = recruit(this.unit[this.index], posx, posy, facing, team);
+				if(rec){
+					this.bg.dUnits.push( rec );
+					this.bg.setCursor(posx, posy);
+					this.bg.menu = null;
+				}
+			};
+
+			return menu;
+		}
+		
+		function Battleground(id, name, dimx, dimy, numPlayers, tiles, dUnits){
+			this.id = id;
+			this.name = name;
+			this.dimx = dimx;
+			this.dimy = dimy;
+			this.numPlayers = numPlayers;
+			this.tiles = tiles;
+			this.dUnits = dUnits;
+			this.day = 0;
+			this.turn = 1;
+			this.cursorx = 0;
+			this.cursory = 0;
+			this.cursortile = null;
+			this.cursorunit = null;
+			this.startx = 0;
+			this.starty = 0;
+			this.wait = true;
+			this.moves = [];
+			this.menu = null;
+			this.selectedUnit = null;
+			this.targetUnits = null;
+			this.dropping = [];
+
+			this.initializePlayers = function(){
+				for(i = 0; i < this.dimy; i++)
+					for(j = 0; j < this.dimx; j++)
+						if( Terrains[this.tiles[i*this.dimx + j].terrainType].structure )
+							if( this.tiles[i*this.dimx + j].team != 0 ){
+								Players[this.tiles[i*this.dimx + j].team-1].numBases++;
+								Players[this.tiles[i*this.dimx + j].team-1].income += Terrains[this.tiles[i*this.dimx + j].terrainType].income;
+							}
+			}
+			
+			this.turnStart = function(){
+				var i, j;
+				for(i = 0; i < this.dimy; i++)
+					for(j = 0; j < this.dimx; j++)
+						if( this.tiles[i*this.dimx + j].team == this.turn )
+							if( this.tiles[i*this.dimx + j].terrainType == 4 ) //if tile is HQ
+								this.setCursor(j, i);
+				Players[this.turn-1].money += Players[this.turn-1].income;
+				for(var u in this.dUnits){
+					this.dUnits[u].acted = false;
+					if( this.tiles[this.dUnits[u].gridy*this.dimx + this.dUnits[u].gridx].team == this.turn && this.tiles[this.dUnits[u].gridy*this.dimx + this.dUnits[u].gridx].team == this.dUnits[u].team
+						&& Terrains[this.tiles[this.dUnits[u].gridy*this.dimx + this.dUnits[u].gridx].terrainType].repairs.indexOf(Units[this.dUnits[u].unitType].type) != -1 ){
+						this.dUnits[u].fuel = Units[this.dUnits[u].unitType].fuel;
+						this.dUnits[u].Ammo = Units[this.dUnits[u].unitType].Ammo;
+						var repair = Math.min( Math.ceil(10 - this.dUnits[u].HP), 2);
+						if(Players[this.turn-1].money > repair*Units[this.dUnits[u].unitType].cost)
+							Players[this.turn-1].money -= repair*Units[this.dUnits[u].unitType].cost;
+							this.dUnits[u].HP = Math.min(this.dUnits[u].HP + repair, 10);
+					}
+					this.dUnits[u].fuel -= Units[this.dUnits[u].unitType].fpt;
+					if(this.dUnits[u].fuel <= 0) excluir.push(u);
+				}
+				for(var e in excluir)
+					this.dUnits.splice(this.dUnits.indexOf(excluir[e]), 1);//crash
+				excluir = [];
+				this.wait = false;
+			};
+
+			this.fire = function(){
+				targetUnits = this.canFire();
+			};
+			this.capture = function(){
+				this.selectedUnit.capturing = true;
+				this.cursortile.capture -= Math.floor(this.selectedUnit.HP);
+				if( this.cursortile.capture <= 0){
+					if(this.cursortile.terrainType == 4){
+						win = this.turn;
+						started = false;
+					}else{
+						this.cursortile.capture = 20;
+						Players[this.turn-1].numBases += 1;
+						Players[this.turn-1].income += Terrains[this.cursortile.terrainType].income;
+						if(this.cursortile > 0){
+							Players[this.cursortile.team-1].numBases -= 1;
+							Players[this.cursortile.team-1].income -= Terrain[this.cursortile.terrainType].income;
+						}
+						this.cursortile.team = this.turn;
+					}
+				}
+				this.nothing();
+			};
+			this.load = function(){
+				var unit;
+				for(var u in this.dUnits){
+					if(this.dUnits[u] == this.selectedUnit){
+						unit = u;
+						break;
+					}
+				}
+				if(this.cursorunit.transporting1 == null){
+					this.cursorunit.transporting1 = this.selectedUnit;
+				}else{
+					this.cursorunit.transporting2 = this.selectedUnit;
+				}
+				var x = this.cursorunit.gridx;
+				var y = this.cursorunit.gridy;
+				this.nothing();
+				this.dUnits[unit].gridx = -1;
+				this.dUnits[unit].gridy = -1;
+				this.setCursor(x, y);
+			};
+			this.drop = function(){
+				this.dropping = freeNeighbour();
+			};
+			this.supply = function(){
+				var aux = this.inRange(1, 1, 1);
+				for(var a in aux){
+					this.dUnits[aux[a]].fuel = Units[this.dUnits[aux[a]].unitType].fuel;
+					this.dUnits[aux[a]].Ammo = Units[this.dUnits[aux[a]].unitType].Ammo;
+				}
+				this.nothing();
+			};
+			this.nothing = function(){
+				this.selectedUnit.gridx = this.cursorx;
+				this.selectedUnit.gridy = this.cursory;
+				this.selectedUnit.acted = true;
+				this.cancel();
+			};
+			this.inRange = function(min, max, friend){
+				var ret = [];
+				for(var u in this.dUnits){
+					var dist = Math.abs(this.dUnits[u].gridx - this.selectedUnit.gridx) + Math.abs(this.dUnits[u].gridy - this.selectedUnit.gridy);
+					if( dist >= min && dist <= max)
+						ret.push(u);
+				}
+				return ret;
+			};
+			this.canFire = function(){
+				var ret = [];
+
+				return ret;
+			};
+			this.emptyNeighbours = function(){
+				if(Terrains[this.cursortile.terrainType].moveTable[Units[this.selectedUnit.unitType].movType] == 200) return [];
+
+				var ret = [ [this.cursorx, this.cursory+1], [this.cursorx+1, this.cursory], [this.cursorx, this.cursory-1], [this.cursorx-1, this.cursory] ];
+
+				for(var r in ret)
+					if(ret[r][0] > 0 && ret[r][1] > 0 && ret[r][0] < this.dimx && ret[r][1] < this.dimy)
+						excluir.push(r);
+				for(var e in excluir)
+					this.dUnits.splice(this.dUnits.indexOf(excluir[e]), 1);
+				excluir = [];
+				
+				for(var r in ret)
+					if(Terrains[this.tiles[ret[r][1]*this.dimx + ret[r][0]].terrainType].moveTable[Units[this.selectedUnit.unitType].movType] == 200)
+						excluir.push(r);
+				for(var e in excluir)
+					this.dUnits.splice(this.dUnits.indexOf(excluir[e]), 1);
+				excluir = [];
+				
+				for(var r in ret)
+					for(var u in this.dUnits)
+						if(this.dUnits[u].gridx == ret[r][0] && this.dUnits[u].gridy == ret[r][1])
+							excluir.push(r);
+				for(var e in excluir)
+					this.dUnits.splice(this.dUnits.indexOf(excluir[e]), 1);
+				excluir = [];
+
+				return ret;
+			};
+
+			this.up = function(){
+				if(this.menu)
+					this.menu.up(); 
+				else
+					this.setCursor(this.cursorx, this.cursory - 1);
+			};
+			this.down = function(){
+				if(this.menu)
+					this.menu.down(); 
+				else
+					this.setCursor(this.cursorx, this.cursory + 1);
+			};
+			this.left = function(){
+				if(!this.menu)
+					this.setCursor(this.cursorx - 1, this.cursory);
+			};
+			this.right = function(){
+				if(!this.menu)
+					this.setCursor(this.cursorx + 1, this.cursory);
+			};
+			this.cancel = function(){
+				this.menu = null;
+				this.dropping = [];
+				if(this.selectedUnit){
+						this.selectedUnit.run = false;
+					this.setCursor(this.selectedUnit.gridx, this.selectedUnit.gridy);
+					this.selectedUnit = null;
+					this.moves = [];
+				}
+				if(this.targetUnit)
+					this.targetUnit = null;
+			};
+			this.select = function(){
+				if(this.menu){
+					this.menu.select();
+				}else if(this.moves.length > 0){
+					if(this.moves[this.cursory*this.dimx + this.cursorx][0] <= Units[this.selectedUnit.unitType].moviment){
+						if(this.cursorunit && this.cursorunit != this.selectedUnit){
+							if(this.cursorunit.team == this.turn && (Units[this.cursorunit.unitType].cargo.indexOf(parseInt(this.selectedUnit.unitType)) != -1)
+								&& (!this.cursorunit.transporting1 || !this.cursorunit.transporting2) )
+								this.menu = actionMenu( 0, 0, 1, 0, 0);
+						}else{
+							var capture = Units[this.selectedUnit.unitType].capturer && this.cursortile.capture && this.cursortile.team != this.turn;
+							var supply = this.selectedUnit.unitType == 6 && this.inRange(1, 1, 1).length > 0; //is APC
+							var drop = (this.selectedUnit.transporting1 || this.selectedUnit.transporting2) && this.emptyNeighbours() > 0;
+							this.menu = actionMenu( this.canFire().length > 0, capture, 0, drop, supply, 1);
+						}
+					}
+				}else{
+					if(this.cursorunit){
+						if(this.cursorunit.team == this.turn)
+							if(!this.cursorunit.acted){
+								this.selectedUnit = this.cursorunit;
+								this.calcPossibleMoves();
+								this.selectedUnit.run = true;
+							}
+					}else if(Terrains[this.cursortile.terrainType].menu != 0){
+						if(this.cursortile.team == this.turn){
+							if(Terrains[this.cursortile.terrainType].menu == 1){
+								this.menu = menuRecruit("Land", this.cursorx, this.cursory, this.turn%2, this.turn, bg);
+							}else if(Terrains[this.cursortile.terrainType].menu == 2){
+								this.menu = menuRecruit("Air", this.cursorx, this.cursory, this.turn%2, this.turn, bg);
+							}else if(Terrains[this.cursortile.terrainType].menu == 3){
+								this.menu = menuRecruit("Sea", this.cursorx, this.cursory, this.turn%2, this.turn, bg);
+							}
+						}
+					}
+				}
+			};
+			
+			this.calcPossibleMoves = function(){
+				var openList = [];
+				var min;
+				var aux;
+				this.moves = [];
+				
+				for(var t in this.tiles){
+					this.moves.push( [200, null] );
+				}
+				
+				openList.push( [this.cursorx, this.cursory] );
+				this.moves[this.cursory*this.dimx + this.cursorx][0] = 0;
+				
+				while(openList.length > 0){
+					min = 0;
+					for(var u in openList){
+						aux = openList[u][1]*this.dimx + openList[u][0];
+						if( this.moves[openList[min][1]*this.dimx + openList[min][0]][0] > this.moves[aux][0] ){
+							min = u;
+						}
+					}
+					aux = openList[min][1]*this.dimx + openList[min][0];
+
+					//adiciona vizinhos
+					var neighbours = [ [openList[min][0]+1, openList[min][1]], [openList[min][0]-1, openList[min][1]], [openList[min][0], openList[min][1]+1], [openList[min][0], openList[min][1]-1] ];
+
+					for(var n in neighbours)
+						if(neighbours[n][0] > 0 && neighbours[n][1] > 0 && neighbours[n][0] < this.dimx && neighbours[n][1] < this.dimy){
+							var dist = this.moves[aux][0] + Terrains[ this.tiles[neighbours[n][1]*this.dimx + neighbours[n][0]].terrainType].moveTable[Units[this.selectedUnit.unitType].movType];
+							if( Units[this.selectedUnit.unitType].moviment >= dist && dist < this.moves[neighbours[n][1]*this.dimx + neighbours[n][0]][0] ){
+								this.moves[neighbours[n][1]*this.dimx + neighbours[n][0]][0] = dist;
+								this.moves[neighbours[n][1]*this.dimx + neighbours[n][0]][1] = aux;
+								openList.push(neighbours[n]);
+							}
+						}
+
+
+					openList.splice(min, 1);
+				}
+			}
+			
+			this.turnEnd = function(){
+				this.cancel();
+				this.wait = true;
+				this.turn++;
+				if(this.turn > numPlayers){ //new day
+					this.day++;
+					this.turn = 1;
+				}
+			};
+
+			this.drawCursor = function(){
+				difx = this.cursorx - this.startx;
+				dify = this.cursory - this.starty;
+
+				ctx.strokeStyle = "rgb(0, 0, 0)";
+				ctx.lineWidth = 1;
+				ctx.strokeRect(difx*32, dify*32, 32, 32);
+			};
+
+			this.draw = function(){
+				for(i = 0; i < this.dimy; i++)
+					for(j = 0; j < this.dimx; j++)
+						this.tiles[i*this.dimx + j].draw( (j-this.startx)*32, (i-this.starty)*32, 0);
+				for(i = 0; i < this.dimy; i++)
+					for(j = 0; j < this.dimx; j++)
+						if( this.selectedUnit && this.moves[i*this.dimx + j][0] <= Units[this.selectedUnit.unitType].moviment ){
+							ctx.fillStyle = "rgba(0, 127, 255, 0.5)";
+							ctx.fillRect( (j-this.startx)*32, (i-this.starty)*32, 32, 32 );
+							ctx.filStyle = "black";
+							ctx.font = "11px Arial";
+							escreve( this.selectedUnit && this.moves[i*this.dimx + j][0] , (j-this.startx)*32+16, (i-this.starty)*32+16);
+						}
+				for(var u in this.dUnits)
+					this.dUnits[u].draw( (this.dUnits[u].gridx-this.startx)*32, (this.dUnits[u].gridy-this.starty)*32, 0);
+				this.drawCursor();
+				if(this.menu) this.menu.draw(40, 20);
+			};
+
+			this.setCursor = function(x,y){
+				this.cursorx = this.dimx > x ? (0 > x ? 0 : x) : this.dimx-1;
+				this.cursory = this.dimy > y ? (1 > y ? 1 : y) : this.dimy;
+
+				this.cursorunit = null;
+				for(var u in this.dUnits)
+					if(this.dUnits[u].gridx == this.cursorx && this.dUnits[u].gridy == this.cursory){
+						this.cursorunit = this.dUnits[u];
+						break;
+					}
+				this.cursortile = this.tiles[this.cursory*this.dimx + this.cursorx];
+				
+				//difx = Math.abs(this.cursorx - this.startx);
+				//this.startx += (difx > 13 ? difx - 13 : (difx < 2 ? difx - 2 : 0) );
+				//this.startx = this.dimx > this.startx ? (0 > this.startx ? 0 : this.startx) : this.dimx-1;
+
+				//dify = Math.abs(this.cursory - this.starty);
+				//this.starty += (dify > 8 ? dify-8 : (dify < 2 ? dify - 2 : 0) );
+				//this.starty = this.dimy > this.starty ? (1 > this.starty ? 1 : this.starty) : this.dimy;
+			};
+		}
+
+
+		function til(id, team = 0){
+			return new Tile(id, team);
+		}
+
+		function start(){
+			Tiles = [
+			til(10),til(10), til(10), til(10), til(10),til(10),til(10),til(10),til(10),til(10),til(10),til(10), til(10), til(10), til(10),
+			til(10),til(3),  til(3),  til(2),  til(2), til(1), til(1), til(13),til(1), til(1), til(2), til(2),  til(3),  til(3),  til(10),
+			til(10),til(1),  til(3),  til(2),  til(2), til(2), til(1), til(13),til(1), til(2), til(2), til(2),  til(3),  til(1),  til(10),
+			til(10),til(9),  til(9),  til(9),  til(9), til(6), til(9), til(0), til(9), til(6), til(9), til(9),  til(9),  til(9),  til(10),
+			til(10),til(3),  til(6,1),til(3),  til(3), til(3), til(3), til(13),til(3), til(3), til(3), til(3),  til(6,2),til(3),  til(10),
+			til(10),til(7,1),til(4,1),til(6,1),til(3), til(3), til(3), til(13),til(3), til(3), til(3), til(6,2),til(4,2),til(7,2),til(10),
+			til(10),til(3),  til(5,1),til(8,1),til(10),til(10),til(10),til(10),til(10),til(10),til(10),til(8,2),til(5,2),til(3),  til(10),
+			til(10),til(12), til(12), til(10), til(10),til(10),til(10),til(10),til(10),til(10),til(10),til(10), til(12), til(12), til(10),
+			til(10),til(10), til(10), til(10), til(10),til(10),til(10),til(10),til(10),til(10),til(10),til(10), til(10), til(10), til(10),
+			til(10),til(10), til(10), til(10), til(10),til(10),til(10),til(10),til(10),til(10),til(10),til(10), til(10), til(10), til(10),
+			]
+			bg = new Battleground(0, "test", 15, 10, 2, Tiles, []);
+			for(var i = 0; i < bg.numPlayers; i++){
+				Players.push( new Player("Player " + i) );
+			}
+			bg.initializePlayers();
+			started = true;
+		}
+		
+		// CONTROLES
+		function teclaPressionada(e){
+			console.log("Tecla Pressionada: " + e.keyCode);
+			switch(e.keyCode){
+				case 13:
+					if( !started && imgLib.isReady() ){
+						start();
+					}else if(bg.wait){
+						bg.turnStart();
+					}
+					break;
+				case 32:
+					break;
+				case 37:		//left a
+				case 65:
+					if(started)
+						if(!bg.wait)
+							bg.left();
+					break;
+				case 39:		//right d
+				case 68:
+					if(started)
+						if(!bg.wait)
+							bg.right();
+					break;
+				case 38:		//up w
+				case 87:
+					if(started)
+						if(!bg.wait)
+							bg.up();
+					break;
+				case 40:		//down s
+				case 83:
+					if(started)
+						if(!bg.wait)
+							bg.down();
+					break;
+				case 90:		//z
+					if(started)
+						if(!bg.wait)
+							bg.select();
+					break;
+				case 88:		//x
+					if(started)
+						if(!bg.wait)
+							bg.cancel();
+					break;
+				case 79:		//o
+					if(started)
+						if(!bg.wait)
+							bg.turnEnd();
+					break;
+			}
+		}
+
+		// Loop principal
+		function passo(){
+			//Limpar a tela
+			ctx.clearRect(0,0, tela.width, tela.height);
+
+			ctx.fillStyle = "black";
+			ctx.fillRect(0, 0, 600, 320);
+
+			if(started){
+				if(bg.wait){
+					//desenha texto
+					ctx.fillStyle = "white";
+					ctx.lineWidth = 1;
+					ctx.font = "28px Arial";
+					ctx.strokeStyle = "white";
+					escreve("Day " + bg.day, 257, 130);
+					ctx.font = "20px Arial";
+					escreve("Press [Enter] to continue", 180, 220);
+					ctx.font = "24px Arial";
+					if(bg.turn == 1){
+						ctx.fillStyle = "lightcoral";
+						ctx.strokeStyle = "red";
+					}else if(bg.turn == 2){
+						ctx.strokeStyle = "blue";
+					}else if(bg.turn == 3){
+						ctx.strokeStyle = "green";
+					}else if(bg.turn == 4){
+						ctx.strokeStyle = "yellow";
+					}
+					escreve(Players[bg.turn-1].name + " turn", 235, 180);
+				}else{
+					var fundo = til(3);
+					//desenha fundo
+					for(i = 0; i < gridHeight; i+=32)
+						for(j = 0; j < gridWidth; j+=32)
+							fundo.draw(j,i,0);
+
+					//Move
+					
+					//Desenha
+					bg.draw();
+					desenhaPainelLateral();
+				}
+			}
+			else{
+				//desenha texto
+				ctx.fillStyle = "white";
+				ctx.strokeStyle = "white";
+				ctx.lineWidth = 1;
+				ctx.font = "28px Arial";
+				
+				if(win > 0){
+					if(win == 1){
+						ctx.fillStyle = "lightcoral";
+						ctx.strokeStyle = "red";
+					}else if(win == 2){
+						ctx.fillStyle = "lightblue";
+						ctx.strokeStyle = "blue";
+					}else if(win == 3){
+						ctx.fillStyle = "lightgreen";
+						ctx.strokeStyle = "green";
+					}else if(win == 4){
+						ctx.fillStyle = "yellow";
+						ctx.strokeStyle = "goldenrod";
+					}
+					escreve(Players[win-1].name + " won!", 210, 167);
+				}else{
+					escreve("Press [Enter] to start a new game", 80, 167);
+				}
+			}
+		}
+
+		function desenhaPainelLateral(){
+			//ctx.fillStyle = "gold";
+			//ctx.strokeStyle = "goldenrod";
+			//ctx.lineWidth = 1;
+			//ctx.font = "20px Arial";
+			//escreve("Score: "+ score, 10, 30);
+			//ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+			//ctx.strokeStyle = "rgba(218, 0, 0, 0.5)";
+			//ctx.beginPath();
+			//ctx.rect(150, 12, pc.vida/maxVida*400, 20);
+			//ctx.closePath();
+			//ctx.fill();
+			//ctx.stroke();
+			//ctx.strokeStyle = "rgba(119,136,153, 0.8)";
+			//ctx.beginPath();
+			//ctx.rect(150, 12, 400, 20);
+			//ctx.closePath();
+			//ctx.stroke();
+		}
+
+		function escreve(texto, x, y){
+			ctx.fillText(texto, x, y);
+			ctx.strokeText(texto, x, y);
+		}
+		
+		setInterval(passo, 1000/fps);
+		addEventListener("keydown", teclaPressionada);
+    </script>
+  </body>
+</html>
